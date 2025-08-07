@@ -1,5 +1,24 @@
 // Data and Configuration for Al-Arab Car Trade App
 
+// Firebase Configuration
+const firebaseConfig = {
+    // Add your Firebase config here
+    apiKey: "your-api-key",
+    authDomain: "your-project.firebaseapp.com",
+    databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "your-sender-id",
+    appId: "your-app-id"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Get Firebase services
+const auth = firebase.auth();
+const database = firebase.database();
+
 // Investment Plans Data
 const INVESTMENT_PLANS = [
     {
@@ -91,116 +110,6 @@ const STORAGE_KEYS = {
     REFERRALS: "pori_referrals"
 };
 
-// Mock Database (for demo purposes)
-let mockDatabase = {
-    users: {},
-    investments: {},
-    transactions: {},
-    referrals: {},
-    settings: {
-        investmentPlans: INVESTMENT_PLANS,
-        supportInfo: SUPPORT_INFO,
-        appConfig: APP_CONFIG
-    }
-};
-
-// Initialize with demo data
-function initializeDemoData() {
-    // Demo user
-    mockDatabase.users["demo123"] = {
-        uid: "demo123",
-        username: "Demo User",
-        email: "demo@example.com",
-        balance: 50000,
-        total_invested: 15000,
-        total_earned: 2500,
-        withdrawable_profit: 1200,
-        refer_code: "DEMO123",
-        referred_by: "",
-        referral_earnings: 500,
-        created_at: Date.now(),
-        last_login: Date.now()
-    };
-
-    // Demo investments
-    mockDatabase.investments["demo123"] = [
-        {
-            id: "inv1",
-            planId: "refinery1",
-            planName: "Oil Refinery",
-            amount: 5000,
-            dailyProfit: 175,
-            duration: 90,
-            totalReturn: 15750,
-            startDate: Date.now() - (7 * 24 * 60 * 60 * 1000), // 7 days ago
-            status: "active",
-            lastProfitClaim: Date.now() - (24 * 60 * 60 * 1000), // 1 day ago
-            earnedSoFar: 1225
-        },
-        {
-            id: "inv2",
-            planId: "refinery2",
-            planName: "Gas Refinery",
-            amount: 8000,
-            dailyProfit: 296,
-            duration: 90,
-            totalReturn: 26640,
-            startDate: Date.now() - (3 * 24 * 60 * 60 * 1000), // 3 days ago
-            status: "active",
-            lastProfitClaim: Date.now() - (24 * 60 * 60 * 1000), // 1 day ago
-            earnedSoFar: 888
-        }
-    ];
-
-    // Demo transactions
-    mockDatabase.transactions["demo123"] = [
-        {
-            id: "tx1",
-            type: "investment",
-            amount: 5000,
-            description: "Investment in Oil Refinery",
-            status: "completed",
-            timestamp: Date.now() - (7 * 24 * 60 * 60 * 1000)
-        },
-        {
-            id: "tx2",
-            type: "investment",
-            amount: 8000,
-            description: "Investment in Gas Refinery",
-            status: "completed",
-            timestamp: Date.now() - (3 * 24 * 60 * 60 * 1000)
-        },
-        {
-            id: "tx3",
-            type: "profit_claim",
-            amount: 175,
-            description: "Daily profit from Oil Refinery",
-            status: "completed",
-            timestamp: Date.now() - (24 * 60 * 60 * 1000)
-        }
-    ];
-
-    // Demo referrals
-    mockDatabase.referrals["demo123"] = [
-        {
-            id: "ref1",
-            username: "John Doe",
-            email: "john@example.com",
-            joined_at: Date.now() - (10 * 24 * 60 * 60 * 1000),
-            commission_earned: 250,
-            status: "active"
-        },
-        {
-            id: "ref2",
-            username: "Jane Smith",
-            email: "jane@example.com",
-            joined_at: Date.now() - (5 * 24 * 60 * 60 * 1000),
-            commission_earned: 250,
-            status: "active"
-        }
-    ];
-}
-
 // Utility Functions
 function generateId() {
     return Math.random().toString(36).substr(2, 9);
@@ -238,7 +147,7 @@ function validatePassword(password) {
     return password.length >= 6;
 }
 
-// Database Simulation Functions
+// Database Functions
 function saveToLocalStorage(key, data) {
     try {
         localStorage.setItem(key, JSON.stringify(data));
@@ -257,191 +166,372 @@ function loadFromLocalStorage(key) {
     }
 }
 
-// Mock API Functions
+// Firebase API Functions
 const API = {
     // Authentication
     async signIn(email, password) {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Demo login
-        if (email === "demo@example.com" && password === "demo123") {
-            const user = mockDatabase.users["demo123"];
-            saveToLocalStorage(STORAGE_KEYS.USER, user);
-            saveToLocalStorage(STORAGE_KEYS.TOKEN, "demo_token_" + Date.now());
-            return user;
+        try {
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            // Get user data from database
+            const userSnapshot = await database.ref(`users/${user.uid}`).once('value');
+            const userData = userSnapshot.val();
+            
+            if (!userData) {
+                throw new Error("User data not found");
+            }
+            
+            // Update last login
+            await database.ref(`users/${user.uid}`).update({
+                last_login: Date.now()
+            });
+            
+            const userWithAuth = {
+                uid: user.uid,
+                email: user.email,
+                ...userData
+            };
+            
+            saveToLocalStorage(STORAGE_KEYS.USER, userWithAuth);
+            return userWithAuth;
+        } catch (error) {
+            console.error('Firebase sign in error:', error);
+            throw new Error(error.message);
         }
-        
-        throw new Error("Invalid email or password");
     },
 
     async signUp(email, password, username, referCode = "") {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Check if user already exists
-        if (mockDatabase.users["demo123"] && mockDatabase.users["demo123"].email === email) {
-            throw new Error("User already exists");
+        try {
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            // Generate referral code
+            const generatedReferCode = username.toUpperCase() + Math.random().toString(36).substr(2, 4);
+            
+            // Create user data
+            const userData = {
+                uid: user.uid,
+                username: username,
+                email: email,
+                balance: 1000, // Welcome bonus
+                total_invested: 0,
+                total_earned: 0,
+                withdrawable_profit: 0,
+                refer_code: generatedReferCode,
+                referred_by: referCode,
+                referral_earnings: 0,
+                created_at: Date.now(),
+                last_login: Date.now()
+            };
+            
+            // Save user data to database
+            await database.ref(`users/${user.uid}`).set(userData);
+            
+            // If referral code provided, update referrer's earnings
+            if (referCode) {
+                await this.processReferral(referCode, userData);
+            }
+            
+            saveToLocalStorage(STORAGE_KEYS.USER, userData);
+            return userData;
+        } catch (error) {
+            console.error('Firebase sign up error:', error);
+            throw new Error(error.message);
         }
-        
-        const userId = generateId();
-        const user = {
-            uid: userId,
-            username: username,
-            email: email,
-            balance: 1000, // Welcome bonus
-            total_invested: 0,
-            total_earned: 0,
-            withdrawable_profit: 0,
-            refer_code: username.toUpperCase() + Math.random().toString(36).substr(2, 4),
-            referred_by: referCode,
-            referral_earnings: 0,
-            created_at: Date.now(),
-            last_login: Date.now()
-        };
-        
-        mockDatabase.users[userId] = user;
-        saveToLocalStorage(STORAGE_KEYS.USER, user);
-        saveToLocalStorage(STORAGE_KEYS.TOKEN, "demo_token_" + Date.now());
-        
-        return user;
+    },
+
+    async processReferral(referCode, newUserData) {
+        try {
+            // Find user with this referral code
+            const usersSnapshot = await database.ref('users').orderByChild('refer_code').equalTo(referCode).once('value');
+            const referrerData = usersSnapshot.val();
+            
+            if (referrerData) {
+                const referrerId = Object.keys(referrerData)[0];
+                const referrer = referrerData[referrerId];
+                
+                // Calculate commission (5% of welcome bonus)
+                const commission = 1000 * APP_CONFIG.referralCommission;
+                
+                // Update referrer's earnings
+                await database.ref(`users/${referrerId}`).update({
+                    referral_earnings: referrer.referral_earnings + commission
+                });
+                
+                // Create commission record
+                await database.ref('referral_commissions').push({
+                    referrerId: referrerId,
+                    referredUserId: newUserData.uid,
+                    referredUsername: newUserData.username,
+                    commissionAmount: commission,
+                    timestamp: Date.now()
+                });
+            }
+        } catch (error) {
+            console.error('Error processing referral:', error);
+        }
     },
 
     // User Data
     async getUserData(userId) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockDatabase.users[userId] || null;
+        try {
+            const snapshot = await database.ref(`users/${userId}`).once('value');
+            return snapshot.val();
+        } catch (error) {
+            console.error('Error getting user data:', error);
+            throw new Error('Failed to get user data');
+        }
     },
 
     async updateUserData(userId, updates) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        if (mockDatabase.users[userId]) {
-            mockDatabase.users[userId] = { ...mockDatabase.users[userId], ...updates };
-            saveToLocalStorage(STORAGE_KEYS.USER, mockDatabase.users[userId]);
-            return mockDatabase.users[userId];
+        try {
+            await database.ref(`users/${userId}`).update(updates);
+            const updatedUser = await this.getUserData(userId);
+            saveToLocalStorage(STORAGE_KEYS.USER, updatedUser);
+            return updatedUser;
+        } catch (error) {
+            console.error('Error updating user data:', error);
+            throw new Error('Failed to update user data');
         }
-        throw new Error("User not found");
     },
 
     // Investments
     async getInvestments(userId) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockDatabase.investments[userId] || [];
+        try {
+            const snapshot = await database.ref(`investments/${userId}`).once('value');
+            const investments = snapshot.val();
+            return investments ? Object.values(investments) : [];
+        } catch (error) {
+            console.error('Error getting investments:', error);
+            return [];
+        }
     },
 
     async createInvestment(userId, investmentData) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const investment = {
-            id: generateId(),
-            ...investmentData,
-            startDate: Date.now(),
-            status: "active",
-            lastProfitClaim: 0,
-            earnedSoFar: 0
-        };
-        
-        if (!mockDatabase.investments[userId]) {
-            mockDatabase.investments[userId] = [];
+        try {
+            const investment = {
+                id: generateId(),
+                ...investmentData,
+                startDate: Date.now(),
+                status: "active",
+                lastProfitClaim: 0,
+                earnedSoFar: 0
+            };
+            
+            // Save investment to database
+            await database.ref(`investments/${userId}`).push(investment);
+            
+            // Update user balance
+            const userSnapshot = await database.ref(`users/${userId}`).once('value');
+            const userData = userSnapshot.val();
+            
+            await database.ref(`users/${userId}`).update({
+                balance: userData.balance - investmentData.amount,
+                total_invested: userData.total_invested + investmentData.amount
+            });
+            
+            // Create transaction record
+            await this.createTransaction(userId, {
+                type: "investment",
+                amount: investmentData.amount,
+                description: `Investment in ${investmentData.planName}`,
+                status: "completed"
+            });
+            
+            return investment;
+        } catch (error) {
+            console.error('Error creating investment:', error);
+            throw new Error('Failed to create investment');
         }
-        mockDatabase.investments[userId].push(investment);
-        
-        // Update user balance
-        const user = mockDatabase.users[userId];
-        user.balance -= investmentData.amount;
-        user.total_invested += investmentData.amount;
-        
-        // Create transaction record
-        this.createTransaction(userId, {
-            type: "investment",
-            amount: investmentData.amount,
-            description: `Investment in ${investmentData.planName}`,
-            status: "completed"
-        });
-        
-        return investment;
     },
 
     async claimProfit(userId, investmentId) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const investments = mockDatabase.investments[userId] || [];
-        const investment = investments.find(inv => inv.id === investmentId);
-        
-        if (!investment) {
-            throw new Error("Investment not found");
+        try {
+            // Get investment
+            const investmentsSnapshot = await database.ref(`investments/${userId}`).once('value');
+            const investments = investmentsSnapshot.val();
+            
+            if (!investments) {
+                throw new Error("No investments found");
+            }
+            
+            // Find the specific investment
+            let investment = null;
+            let investmentKey = null;
+            
+            for (const [key, inv] of Object.entries(investments)) {
+                if (inv.id === investmentId) {
+                    investment = inv;
+                    investmentKey = key;
+                    break;
+                }
+            }
+            
+            if (!investment) {
+                throw new Error("Investment not found");
+            }
+            
+            const now = Date.now();
+            const timeSinceLastClaim = now - investment.lastProfitClaim;
+            
+            if (timeSinceLastClaim < APP_CONFIG.profitClaimInterval) {
+                throw new Error("Profit can only be claimed once per day");
+            }
+            
+            // Calculate profit
+            const profit = investment.dailyProfit;
+            
+            // Update investment
+            await database.ref(`investments/${userId}/${investmentKey}`).update({
+                lastProfitClaim: now,
+                earnedSoFar: investment.earnedSoFar + profit
+            });
+            
+            // Update user data
+            const userSnapshot = await database.ref(`users/${userId}`).once('value');
+            const userData = userSnapshot.val();
+            
+            await database.ref(`users/${userId}`).update({
+                balance: userData.balance + profit,
+                total_earned: userData.total_earned + profit,
+                withdrawable_profit: userData.withdrawable_profit + profit
+            });
+            
+            // Create transaction record
+            await this.createTransaction(userId, {
+                type: "profit_claim",
+                amount: profit,
+                description: `Daily profit from ${investment.planName}`,
+                status: "completed"
+            });
+            
+            return { profit, newBalance: userData.balance + profit };
+        } catch (error) {
+            console.error('Error claiming profit:', error);
+            throw new Error(error.message);
         }
-        
-        const now = Date.now();
-        const timeSinceLastClaim = now - investment.lastProfitClaim;
-        
-        if (timeSinceLastClaim < APP_CONFIG.profitClaimInterval) {
-            throw new Error("Profit can only be claimed once per day");
-        }
-        
-        // Calculate profit
-        const profit = investment.dailyProfit;
-        investment.lastProfitClaim = now;
-        investment.earnedSoFar += profit;
-        
-        // Update user data
-        const user = mockDatabase.users[userId];
-        user.balance += profit;
-        user.total_earned += profit;
-        user.withdrawable_profit += profit;
-        
-        // Create transaction record
-        this.createTransaction(userId, {
-            type: "profit_claim",
-            amount: profit,
-            description: `Daily profit from ${investment.planName}`,
-            status: "completed"
-        });
-        
-        return { profit, newBalance: user.balance };
     },
 
     // Transactions
     async getTransactions(userId) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockDatabase.transactions[userId] || [];
+        try {
+            const snapshot = await database.ref(`transactions/${userId}`).once('value');
+            const transactions = snapshot.val();
+            if (!transactions) return [];
+            
+            return Object.values(transactions).sort((a, b) => b.timestamp - a.timestamp);
+        } catch (error) {
+            console.error('Error getting transactions:', error);
+            return [];
+        }
     },
 
     async createTransaction(userId, transactionData) {
-        const transaction = {
-            id: generateId(),
-            ...transactionData,
-            timestamp: Date.now()
-        };
-        
-        if (!mockDatabase.transactions[userId]) {
-            mockDatabase.transactions[userId] = [];
+        try {
+            const transaction = {
+                id: generateId(),
+                ...transactionData,
+                timestamp: Date.now()
+            };
+            
+            await database.ref(`transactions/${userId}`).push(transaction);
+            return transaction;
+        } catch (error) {
+            console.error('Error creating transaction:', error);
+            throw new Error('Failed to create transaction');
         }
-        mockDatabase.transactions[userId].unshift(transaction);
-        
-        return transaction;
     },
 
     // Referrals
     async getReferralData(userId) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const user = mockDatabase.users[userId];
-        const referrals = mockDatabase.referrals[userId] || [];
-        
-        return {
-            referralCode: user.refer_code,
-            totalReferrals: referrals.length,
-            totalEarnings: user.referral_earnings,
-            referralList: referrals
-        };
+        try {
+            const userSnapshot = await database.ref(`users/${userId}`).once('value');
+            const userData = userSnapshot.val();
+            
+            // Get users referred by this user
+            const referralsSnapshot = await database.ref('users').orderByChild('referred_by').equalTo(userData.refer_code).once('value');
+            const referrals = referralsSnapshot.val() || {};
+            
+            // Get commission history
+            const commissionsSnapshot = await database.ref('referral_commissions').orderByChild('referrerId').equalTo(userId).once('value');
+            const commissions = commissionsSnapshot.val() || {};
+            
+            const referralList = Object.values(referrals).map(referral => ({
+                id: referral.uid,
+                username: referral.username,
+                email: referral.email,
+                joined_at: referral.created_at,
+                commission_earned: 50, // Default commission per referral
+                status: "active"
+            }));
+            
+            return {
+                referralCode: userData.refer_code,
+                totalReferrals: referralList.length,
+                totalEarnings: userData.referral_earnings,
+                referralList: referralList
+            };
+        } catch (error) {
+            console.error('Error getting referral data:', error);
+            return {
+                referralCode: "",
+                totalReferrals: 0,
+                totalEarnings: 0,
+                referralList: []
+            };
+        }
     },
 
     // Settings
     async getSettings() {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        return mockDatabase.settings;
+        try {
+            const snapshot = await database.ref('settings').once('value');
+            const settings = snapshot.val();
+            
+            if (!settings) {
+                // Initialize default settings
+                const defaultSettings = {
+                    investmentPlans: INVESTMENT_PLANS,
+                    supportInfo: SUPPORT_INFO,
+                    appConfig: APP_CONFIG
+                };
+                
+                await database.ref('settings').set(defaultSettings);
+                return defaultSettings;
+            }
+            
+            return settings;
+        } catch (error) {
+            console.error('Error getting settings:', error);
+            return {
+                investmentPlans: INVESTMENT_PLANS,
+                supportInfo: SUPPORT_INFO,
+                appConfig: APP_CONFIG
+            };
+        }
+    },
+
+    // Logout
+    async logout() {
+        try {
+            await auth.signOut();
+            localStorage.removeItem(STORAGE_KEYS.USER);
+            localStorage.removeItem(STORAGE_KEYS.TOKEN);
+        } catch (error) {
+            console.error('Error logging out:', error);
+        }
     }
 };
 
-// Initialize demo data when the script loads
-initializeDemoData();
+// Auth state observer
+auth.onAuthStateChanged(function(user) {
+    if (user) {
+        console.log('User is signed in:', user.uid);
+    } else {
+        console.log('User is signed out');
+        // Clear local storage when user signs out
+        localStorage.removeItem(STORAGE_KEYS.USER);
+        localStorage.removeItem(STORAGE_KEYS.TOKEN);
+    }
+});
