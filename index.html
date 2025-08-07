@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Arab Car Trade</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f9fafb;
+            color: #1f2937;
+            line-height: 1.5;
+            overflow-x: hidden;
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        /* Mobile-First Design */
+        .mobile-container {
+            width: 100vw;
+            max-width: 414px;
+            min-height: 100vh;
+            min-height: 100dvh;
+            margin: 0 auto;
+            position: relative;
+            background: #f9fafb;
+        }
+
+        .mobile-content {
+            height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+
+        /* Safe Area Support */
+        .safe-area-top {
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Typography */
+        .text-xs { font-size: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-base { font-size: 1rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+
+        /* Colors */
+        .text-white { color: #ffffff; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-700 { color: #374151; }
+        .text-gray-900 { color: #111827; }
+        .text-blue-600 { color: #2563eb; }
+        .text-green-600 { color: #16a34a; }
+        .text-red-600 { color: #dc2626; }
+        .text-yellow-500 { color: #eab308; }
+        .text-purple-500 { color: #8b5cf6; }
+
+        .bg-white { background-color: #ffffff; }
+        .bg-gray-50 { background-color: #f9fafb; }
+        .bg-gray-100 { background-color: #f3f4f6; }
+        .bg-blue-50 { background-color: #eff6ff; }
+        .bg-blue-100 { background-color: #dbeafe; }
+        .bg-blue-600 { background-color: #2563eb; }
+        .bg-green-500 { background-color: #22c55e; }
+        .bg-red-500 { background-color: #ef4444; }
+        .bg-yellow-500 { background-color: #eab308; }
+        .bg-purple-500 { background-color: #8b5cf6; }
+
+        /* Gradients */
+        .bg-gradient {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #1d4ed8 100%);
+        }
+
+        /* Layout */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-row { flex-direction: row; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-around { justify-content: space-around; }
+
+        .grid { display: grid; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        /* Spacing */
+        .p-1 { padding: 0.25rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-3 { padding: 0.75rem; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+
+        .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+
+        .m-1 { margin: 0.25rem; }
+        .m-2 { margin: 0.5rem; }
+        .m-3 { margin: 0.75rem; }
+        .m-4 { margin: 1rem; }
+
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-3 { margin-top: 0.75rem; }
+        .mt-4 { margin-top: 1rem; }
+
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+
+        .space-y-1 > * + * { margin-top: 0.25rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
+        .space-y-3 > * + * { margin-top: 0.75rem; }
+
+        /* Borders and Shadows */
+        .border { border: 1px solid #e5e7eb; }
+        .border-t { border-top: 1px solid #e5e7eb; }
+        .border-gray-200 { border-color: #e5e7eb; }
+
+        .rounded { border-radius: 0.25rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+
+        .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+
+        /* Components */
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-primary { background-color: #2563eb; color: white; }
+        .badge-success { background-color: #22c55e; color: white; }
+        .badge-warning { background-color: #eab308; color: white; }
+        .badge-danger { background-color: #ef4444; color: white; }
+        .badge-purple { background-color: #8b5cf6; color: white; }
+
+        /* Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 0.5rem 1rem;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: #4b5563;
+        }
+
+        .nav-item.active {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+
+        .nav-item:hover {
+            color: #2563eb;
+            background-color: #eff6ff;
+        }
+
+        .nav-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #1d4ed8 100%);
+            color: white;
+            padding: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+
+        /* Investment Plans */
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.2s;
+        }
+
+        .plan-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .plan-image {
+            width: 100%;
+            height: 8rem;
+            object-fit: cover;
+        }
+
+        .plan-content {
+            padding: 0.75rem;
+        }
+
+        .plan-badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+
+        /* Dialog/Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.5rem;
+            max-width: 400px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+
+        .modal-footer {
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Utility Classes */
+        .hidden { display: none; }
+        .block { display: block; }
+        .w-full { width: 100%; }
+        .h-full { height: 100%; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .relative { position: relative; }
+        .absolute { position: absolute; }
+        .fixed { position: fixed; }
+
+        /* Responsive */
+        @media (max-width: 375px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                gap: 0.5rem;
+            }
+        }
+
+        /* Icons */
+        .icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            fill: currentColor;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            border-bottom-color: #2563eb;
+            color: #2563eb;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            z-index: 3000;
+            max-width: 300px;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid #22c55e;
+        }
+
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        /* Progress Bar */
+        .progress {
+            width: 100%;
+            height: 0.5rem;
+            background: #e5e7eb;
+            border-radius: 0.25rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #2563eb;
+            transition: width 0.3s;
+        }
+
+        /* Glass Effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Loading Screen -->
+        <div id="loadingScreen" class="loading">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Auth Screen -->
+        <div id="authScreen" class="mobile-content hidden">
+            <div class="header">
+                <div class="text-center">
+                    <h1 class="text-2xl font-bold mb-2">Al-Arab Car Trade</h1>
+                    <p class="text-sm opacity-90">Welcome to your investment platform</p>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('login')">Login</div>
+                    <div class="tab" onclick="switchTab('signup')">Sign Up</div>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input type="email" id="loginEmail" class="input" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Password</label>
+                        <input type="password" id="loginPassword" class="input" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">CAPTCHA</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="loginCaptcha" class="input" required>
+                            <div id="captchaDisplay" class="bg-gray-100 px-3 py-2 rounded font-mono text-sm"></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Login</button>
+                </form>
+
+                <!-- Signup Form -->
+                <form id="signupForm" class="space-y-3 hidden">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Username</label>
+                        <input type="text" id="signupUsername" class="input" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input type="email" id="signupEmail" class="input" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Password</label>
+                        <input type="password" id="signupPassword" class="input" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Referral Code (Optional)</label>
+                        <input type="text" id="signupReferCode" class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">CAPTCHA</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="signupCaptcha" class="input" required>
+                            <div id="signupCaptchaDisplay" class="bg-gray-100 px-3 py-2 rounded font-mono text-sm"></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Sign Up</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" class="mobile-content hidden">
+            <!-- Home Page -->
+            <div id="homePage" class="page">
+                <div class="header">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 class="text-lg font-bold">Al-Arab Car Trade</h1>
+                            <p class="text-sm opacity-90">Welcome back, <span id="userName">User</span></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs opacity-90">Balance</p>
+                            <p class="text-xl font-bold">₨<span id="userBalance">0</span></p>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="icon mb-1">💰</div>
+                            <p class="text-xs opacity-90">Total Invested</p>
+                            <p class="text-sm font-bold">₨<span id="totalInvested">0</span></p>
+                        </div>
+                        <div class="stat-card">
+                            <div class="icon mb-1">📈</div>
+                            <p class="text-xs opacity-90">Total Earned</p>
+                            <p class="text-sm font-bold">₨<span id="totalEarned">0</span></p>
+                        </div>
+                        <div class="stat-card">
+                            <div class="icon mb-1">🎯</div>
+                            <p class="text-xs opacity-90">Profit Available</p>
+                            <p class="text-sm font-bold">₨<span id="withdrawableProfit">0</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <h2 class="text-xl font-bold mb-4">Investment Plans</h2>
+                    <div id="plansGrid" class="plans-grid">
+                        <!-- Plans will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Page -->
+            <div id="teamPage" class="page hidden">
+                <div class="header">
+                    <h1 class="text-lg font-bold">Team & Referrals</h1>
+                </div>
+
+                <div class="p-4">
+                    <div class="card p-4 mb-4">
+                        <h3 class="font-bold mb-3">Your Referral Code</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="referralCode" class="input" readonly>
+                            <button onclick="copyReferralCode()" class="btn btn-primary">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="card p-3 text-center">
+                            <div class="text-2xl font-bold text-blue-600" id="totalReferrals">0</div>
+                            <div class="text-sm text-gray-600">Total Referrals</div>
+                        </div>
+                        <div class="card p-3 text-center">
+                            <div class="text-2xl font-bold text-green-600" id="totalEarnings">₨0</div>
+                            <div class="text-sm text-gray-600">Total Earnings</div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4">
+                        <h3 class="font-bold mb-3">Referral List</h3>
+                        <div id="referralList" class="space-y-2">
+                            <!-- Referrals will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mine Page -->
+            <div id="minePage" class="page hidden">
+                <div class="header">
+                    <h1 class="text-lg font-bold">My Account</h1>
+                </div>
+
+                <div class="p-4">
+                    <div class="card p-4 mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                                <span id="userInitial">U</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold" id="profileName">User Name</h3>
+                                <p class="text-sm text-gray-600" id="profileEmail">user@example.com</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="card p-4 flex items-center justify-between" onclick="showSection('deposit')">
+                            <div class="flex items-center gap-3">
+                                <div class="icon">💰</div>
+                                <span>Deposit</span>
+                            </div>
+                            <div class="icon">→</div>
+                        </div>
+
+                        <div class="card p-4 flex items-center justify-between" onclick="showSection('withdraw')">
+                            <div class="flex items-center gap-3">
+                                <div class="icon">💳</div>
+                                <span>Withdraw</span>
+                            </div>
+                            <div class="icon">→</div>
+                        </div>
+
+                        <div class="card p-4 flex items-center justify-between" onclick="showSection('investments')">
+                            <div class="flex items-center gap-3">
+                                <div class="icon">📊</div>
+                                <span>My Investments</span>
+                            </div>
+                            <div class="icon">→</div>
+                        </div>
+
+                        <div class="card p-4 flex items-center justify-between" onclick="showSection('transactions')">
+                            <div class="flex items-center gap-3">
+                                <div class="icon">📋</div>
+                                <span>Transaction History</span>
+                            </div>
+                            <div class="icon">→</div>
+                        </div>
+
+                        <div class="card p-4 flex items-center justify-between" onclick="showSection('profile')">
+                            <div class="flex items-center gap-3">
+                                <div class="icon">👤</div>
+                                <span>Profile Settings</span>
+                            </div>
+                            <div class="icon">→</div>
+                        </div>
+
+                        <div class="card p-4 flex items-center justify-between" onclick="showSection('support')">
+                            <div class="flex items-center gap-3">
+                                <div class="icon">🆘</div>
+                                <span>Support</span>
+                            </div>
+                            <div class="icon">→</div>
+                        </div>
+
+                        <button onclick="logout()" class="card p-4 w-full text-left text-red-600">
+                            <div class="flex items-center gap-3">
+                                <div class="icon">🚪</div>
+                                <span>Logout</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav">
+                <div class="flex justify-around">
+                    <div class="nav-item active" onclick="showPage('home')">
+                        <div class="nav-icon">🏠</div>
+                        <span class="text-xs">Home</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('team')">
+                        <div class="nav-icon">👥</div>
+                        <span class="text-xs">Team</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('mine')">
+                        <div class="nav-icon">👤</div>
+                        <span class="text-xs">Mine</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toastContainer"></div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
