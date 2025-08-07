@@ -407,3 +407,5 @@ export function WithdrawForm({ onClose }: WithdrawFormProps) {
     </div>
   )
 }
+
+export default WithdrawForm

@@ -383,3 +383,5 @@ export function DepositForm({ onClose }: DepositFormProps) {
     </div>
   )
 }
+
+export default DepositForm
