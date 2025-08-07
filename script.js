@@ -178,9 +178,11 @@ function showPage(page) {
     // Show selected page
     document.getElementById(page + 'Page').classList.remove('hidden');
     
-    // Update navigation
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-    event.target.closest('.nav-item').classList.add('active');
+    // Update navigation (only for main nav items)
+    if (page !== 'admin') {
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        event.target.closest('.nav-item').classList.add('active');
+    }
     
     // Load page-specific data
     switch (page) {
@@ -192,6 +194,9 @@ function showPage(page) {
             break;
         case 'mine':
             loadMinePage();
+            break;
+        case 'admin':
+            loadAdminDashboard();
             break;
     }
 }
@@ -212,6 +217,11 @@ async function loadUserData() {
         document.getElementById('profileName').textContent = currentUser.username;
         document.getElementById('profileEmail').textContent = currentUser.email;
         document.getElementById('userInitial').textContent = currentUser.username.charAt(0).toUpperCase();
+        
+        // Initialize admin functionality if user is admin
+        if (currentUser.isAdmin) {
+            document.getElementById('adminPanelBtn').classList.remove('hidden');
+        }
         
     } catch (error) {
         console.error('Error loading user data:', error);
@@ -558,7 +568,6 @@ function showWithdrawModal() {
             <h3 class="font-bold">Withdraw Funds</h3>
         </div>
         <div class="modal-body">
-            <p class="text-gray-600 mb-4">Contact support to withdraw funds from your account.</p>
             <div class="bg-green-50 p-3 rounded-lg mb-4">
                 <div class="text-sm">
                     <div class="flex justify-between mb-1">
@@ -571,23 +580,74 @@ function showWithdrawModal() {
                     </div>
                 </div>
             </div>
-            <div class="bg-blue-50 p-3 rounded-lg">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="icon">📞</div>
-                    <span class="font-medium">Phone: ${SUPPORT_INFO.phone}</span>
+            
+            <form id="withdrawForm" class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Amount (₨)</label>
+                    <input type="number" id="withdrawAmount" class="input" min="${APP_CONFIG.minWithdrawal}" max="${currentUser.withdrawable_profit}" required>
                 </div>
-                <div class="flex items-center gap-2">
-                    <div class="icon">📧</div>
-                    <span class="font-medium">Email: ${SUPPORT_INFO.email}</span>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Payment Method</label>
+                    <select id="paymentMethod" class="input" required>
+                        <option value="">Select payment method</option>
+                        <option value="bank">Bank Transfer</option>
+                        <option value="easypaisa">EasyPaisa</option>
+                        <option value="jazzcash">JazzCash</option>
+                        <option value="upaisa">UPaisa</option>
+                    </select>
                 </div>
-            </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Account Details</label>
+                    <textarea id="accountDetails" class="input" rows="3" placeholder="Enter your account number, phone number, or other payment details" required></textarea>
+                </div>
+            </form>
         </div>
         <div class="modal-footer">
-            <button onclick="closeModal()" class="btn btn-primary">Close</button>
+            <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+            <button onclick="submitWithdrawal()" class="btn btn-primary">Submit Request</button>
         </div>
     `);
     
     document.body.appendChild(modal);
+}
+
+// Submit Withdrawal Request
+async function submitWithdrawal() {
+    const amount = parseInt(document.getElementById('withdrawAmount').value);
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const accountDetails = document.getElementById('accountDetails').value;
+    
+    if (!amount || !paymentMethod || !accountDetails) {
+        showToast('Please fill in all fields', 'error');
+        return;
+    }
+    
+    if (amount < APP_CONFIG.minWithdrawal) {
+        showToast(`Minimum withdrawal amount is ₨${APP_CONFIG.minWithdrawal}`, 'error');
+        return;
+    }
+    
+    if (amount > currentUser.withdrawable_profit) {
+        showToast('Insufficient withdrawable balance', 'error');
+        return;
+    }
+    
+    setLoading(true);
+    
+    try {
+        await API.createWithdrawalRequest(currentUser.uid, amount, paymentMethod, accountDetails);
+        
+        // Refresh user data
+        currentUser = await API.getUserData(currentUser.uid);
+        await loadUserData();
+        
+        closeModal();
+        showToast('Withdrawal request submitted successfully!', 'success');
+    } catch (error) {
+        showToast(error.message || 'Failed to submit withdrawal request', 'error');
+    } finally {
+        setLoading(false);
+    }
 }
 
 async function showInvestmentsModal() {
@@ -820,12 +880,17 @@ function showSupportModal() {
 // Logout Function
 function logout() {
     if (confirm('Are you sure you want to logout?')) {
-        localStorage.removeItem(STORAGE_KEYS.USER);
-        localStorage.removeItem(STORAGE_KEYS.TOKEN);
+        API.logout();
         currentUser = null;
         showAuthScreen();
         showToast('Logged out successfully', 'success');
     }
+}
+
+// Show Admin Panel
+function showAdminPanel() {
+    showPage('admin');
+    loadAdminDashboard();
 }
 
 // Auto-refresh user data every 30 seconds

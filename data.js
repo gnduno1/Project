@@ -110,6 +110,12 @@ const STORAGE_KEYS = {
     REFERRALS: "pori_referrals"
 };
 
+// Admin Configuration
+const ADMIN_EMAILS = [
+    "admin@abcartrade.com",
+    "superadmin@abcartrade.com"
+];
+
 // Utility Functions
 function generateId() {
     return Math.random().toString(36).substr(2, 9);
@@ -145,6 +151,10 @@ function validateEmail(email) {
 
 function validatePassword(password) {
     return password.length >= 6;
+}
+
+function isAdmin(email) {
+    return ADMIN_EMAILS.includes(email);
 }
 
 // Database Functions
@@ -190,6 +200,7 @@ const API = {
             const userWithAuth = {
                 uid: user.uid,
                 email: user.email,
+                isAdmin: isAdmin(user.email),
                 ...userData
             };
             
@@ -222,7 +233,9 @@ const API = {
                 referred_by: referCode,
                 referral_earnings: 0,
                 created_at: Date.now(),
-                last_login: Date.now()
+                last_login: Date.now(),
+                status: "active",
+                isAdmin: isAdmin(email)
             };
             
             // Save user data to database
@@ -508,6 +521,285 @@ const API = {
                 investmentPlans: INVESTMENT_PLANS,
                 supportInfo: SUPPORT_INFO,
                 appConfig: APP_CONFIG
+            };
+        }
+    },
+
+    // Admin Functions
+    async getAllUsers() {
+        try {
+            const snapshot = await database.ref('users').once('value');
+            const users = snapshot.val();
+            return users ? Object.values(users) : [];
+        } catch (error) {
+            console.error('Error getting all users:', error);
+            return [];
+        }
+    },
+
+    async getAllInvestments() {
+        try {
+            const snapshot = await database.ref('investments').once('value');
+            const investments = snapshot.val();
+            if (!investments) return [];
+            
+            const allInvestments = [];
+            for (const [userId, userInvestments] of Object.entries(investments)) {
+                for (const [key, investment] of Object.entries(userInvestments)) {
+                    allInvestments.push({
+                        ...investment,
+                        userId: userId,
+                        key: key
+                    });
+                }
+            }
+            return allInvestments;
+        } catch (error) {
+            console.error('Error getting all investments:', error);
+            return [];
+        }
+    },
+
+    async getAllTransactions() {
+        try {
+            const snapshot = await database.ref('transactions').once('value');
+            const transactions = snapshot.val();
+            if (!transactions) return [];
+            
+            const allTransactions = [];
+            for (const [userId, userTransactions] of Object.entries(transactions)) {
+                for (const [key, transaction] of Object.entries(userTransactions)) {
+                    allTransactions.push({
+                        ...transaction,
+                        userId: userId,
+                        key: key
+                    });
+                }
+            }
+            return allTransactions.sort((a, b) => b.timestamp - a.timestamp);
+        } catch (error) {
+            console.error('Error getting all transactions:', error);
+            return [];
+        }
+    },
+
+    async updateUserStatus(userId, status) {
+        try {
+            await database.ref(`users/${userId}`).update({ status: status });
+            return true;
+        } catch (error) {
+            console.error('Error updating user status:', error);
+            throw new Error('Failed to update user status');
+        }
+    },
+
+    async addBalance(userId, amount, reason = "Admin adjustment") {
+        try {
+            const userSnapshot = await database.ref(`users/${userId}`).once('value');
+            const userData = userSnapshot.val();
+            
+            await database.ref(`users/${userId}`).update({
+                balance: userData.balance + amount
+            });
+            
+            // Create transaction record
+            await this.createTransaction(userId, {
+                type: "admin_adjustment",
+                amount: amount,
+                description: reason,
+                status: "completed"
+            });
+            
+            return true;
+        } catch (error) {
+            console.error('Error adding balance:', error);
+            throw new Error('Failed to add balance');
+        }
+    },
+
+    async deductBalance(userId, amount, reason = "Admin adjustment") {
+        try {
+            const userSnapshot = await database.ref(`users/${userId}`).once('value');
+            const userData = userSnapshot.val();
+            
+            if (userData.balance < amount) {
+                throw new Error("Insufficient balance");
+            }
+            
+            await database.ref(`users/${userId}`).update({
+                balance: userData.balance - amount
+            });
+            
+            // Create transaction record
+            await this.createTransaction(userId, {
+                type: "admin_adjustment",
+                amount: -amount,
+                description: reason,
+                status: "completed"
+            });
+            
+            return true;
+        } catch (error) {
+            console.error('Error deducting balance:', error);
+            throw new Error('Failed to deduct balance');
+        }
+    },
+
+    async createWithdrawalRequest(userId, amount, paymentMethod, accountDetails) {
+        try {
+            const withdrawal = {
+                id: generateId(),
+                userId: userId,
+                amount: amount,
+                paymentMethod: paymentMethod,
+                accountDetails: accountDetails,
+                status: "pending",
+                timestamp: Date.now(),
+                processedAt: null,
+                processedBy: null
+            };
+            
+            await database.ref('withdrawals').push(withdrawal);
+            
+            // Deduct from user's withdrawable profit
+            const userSnapshot = await database.ref(`users/${userId}`).once('value');
+            const userData = userSnapshot.val();
+            
+            await database.ref(`users/${userId}`).update({
+                withdrawable_profit: userData.withdrawable_profit - amount
+            });
+            
+            return withdrawal;
+        } catch (error) {
+            console.error('Error creating withdrawal request:', error);
+            throw new Error('Failed to create withdrawal request');
+        }
+    },
+
+    async processWithdrawal(withdrawalId, status, adminId) {
+        try {
+            const withdrawalsSnapshot = await database.ref('withdrawals').once('value');
+            const withdrawals = withdrawalsSnapshot.val();
+            
+            let withdrawal = null;
+            let withdrawalKey = null;
+            
+            for (const [key, w] of Object.entries(withdrawals)) {
+                if (w.id === withdrawalId) {
+                    withdrawal = w;
+                    withdrawalKey = key;
+                    break;
+                }
+            }
+            
+            if (!withdrawal) {
+                throw new Error("Withdrawal not found");
+            }
+            
+            await database.ref(`withdrawals/${withdrawalKey}`).update({
+                status: status,
+                processedAt: Date.now(),
+                processedBy: adminId
+            });
+            
+            // If rejected, return amount to user's withdrawable profit
+            if (status === "rejected") {
+                const userSnapshot = await database.ref(`users/${withdrawal.userId}`).once('value');
+                const userData = userSnapshot.val();
+                
+                await database.ref(`users/${withdrawal.userId}`).update({
+                    withdrawable_profit: userData.withdrawable_profit + withdrawal.amount
+                });
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error processing withdrawal:', error);
+            throw new Error('Failed to process withdrawal');
+        }
+    },
+
+    async getAllWithdrawals() {
+        try {
+            const snapshot = await database.ref('withdrawals').once('value');
+            const withdrawals = snapshot.val();
+            return withdrawals ? Object.values(withdrawals).sort((a, b) => b.timestamp - a.timestamp) : [];
+        } catch (error) {
+            console.error('Error getting all withdrawals:', error);
+            return [];
+        }
+    },
+
+    async updateInvestmentPlan(planId, updates) {
+        try {
+            await database.ref(`settings/investmentPlans/${planId}`).update(updates);
+            return true;
+        } catch (error) {
+            console.error('Error updating investment plan:', error);
+            throw new Error('Failed to update investment plan');
+        }
+    },
+
+    async addInvestmentPlan(plan) {
+        try {
+            const newPlan = {
+                id: generateId(),
+                ...plan,
+                enabled: true
+            };
+            
+            await database.ref(`settings/investmentPlans/${newPlan.id}`).set(newPlan);
+            return newPlan;
+        } catch (error) {
+            console.error('Error adding investment plan:', error);
+            throw new Error('Failed to add investment plan');
+        }
+    },
+
+    async updateSettings(settings) {
+        try {
+            await database.ref('settings').update(settings);
+            return true;
+        } catch (error) {
+            console.error('Error updating settings:', error);
+            throw new Error('Failed to update settings');
+        }
+    },
+
+    async getAdminStats() {
+        try {
+            const users = await this.getAllUsers();
+            const investments = await this.getAllInvestments();
+            const withdrawals = await this.getAllWithdrawals();
+            const transactions = await this.getAllTransactions();
+            
+            const totalRevenue = investments.reduce((sum, inv) => sum + inv.amount, 0);
+            const activeInvestments = investments.filter(inv => inv.status === "active").length;
+            const pendingWithdrawals = withdrawals.filter(w => w.status === "pending").length;
+            
+            // Calculate today's profit
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayTransactions = transactions.filter(t => 
+                t.type === "profit_claim" && new Date(t.timestamp) >= today
+            );
+            const todayProfit = todayTransactions.reduce((sum, t) => sum + t.amount, 0);
+            
+            return {
+                totalUsers: users.length,
+                totalRevenue: totalRevenue,
+                activeInvestments: activeInvestments,
+                pendingWithdrawals: pendingWithdrawals,
+                todayProfit: todayProfit
+            };
+        } catch (error) {
+            console.error('Error getting admin stats:', error);
+            return {
+                totalUsers: 0,
+                totalRevenue: 0,
+                activeInvestments: 0,
+                pendingWithdrawals: 0,
+                todayProfit: 0
             };
         }
     },
