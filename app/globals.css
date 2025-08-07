@@ -1,0 +1,522 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Mobile-First Design - Optimized for 375px-414px screens */
+html,
+body {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
+  overflow-x: hidden;
+  font-size: 14px; /* Base font size for mobile */
+}
+
+/* Mobile Container */
+.mobile-container {
+  width: 100vw;
+  max-width: 414px; /* iPhone Pro Max width */
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Mobile Screen Heights */
+.mobile-screen {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 896px; /* iPhone Pro Max height */
+}
+
+.mobile-content {
+  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Safe Area Support for iOS */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Mobile Typography */
+.mobile-text-xs {
+  font-size: 10px;
+  line-height: 14px;
+}
+.mobile-text-sm {
+  font-size: 12px;
+  line-height: 16px;
+}
+.mobile-text-base {
+  font-size: 14px;
+  line-height: 20px;
+}
+.mobile-text-lg {
+  font-size: 16px;
+  line-height: 24px;
+}
+.mobile-text-xl {
+  font-size: 18px;
+  line-height: 28px;
+}
+.mobile-text-2xl {
+  font-size: 20px;
+  line-height: 28px;
+}
+.mobile-text-3xl {
+  font-size: 24px;
+  line-height: 32px;
+}
+
+/* Mobile Spacing */
+.mobile-p-1 {
+  padding: 4px;
+}
+.mobile-p-2 {
+  padding: 8px;
+}
+.mobile-p-3 {
+  padding: 12px;
+}
+.mobile-p-4 {
+  padding: 16px;
+}
+.mobile-p-6 {
+  padding: 24px;
+}
+
+.mobile-m-1 {
+  margin: 4px;
+}
+.mobile-m-2 {
+  margin: 8px;
+}
+.mobile-m-3 {
+  margin: 12px;
+}
+.mobile-m-4 {
+  margin: 16px;
+}
+
+.mobile-gap-1 {
+  gap: 4px;
+}
+.mobile-gap-2 {
+  gap: 8px;
+}
+.mobile-gap-3 {
+  gap: 12px;
+}
+.mobile-gap-4 {
+  gap: 16px;
+}
+
+/* Mobile Components */
+.mobile-button {
+  height: 44px; /* iOS recommended touch target */
+  min-width: 44px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0 16px;
+}
+
+.mobile-input {
+  height: 44px;
+  font-size: 16px; /* Prevents zoom on iOS */
+  border-radius: 8px;
+  padding: 0 12px;
+}
+
+.mobile-card {
+  border-radius: 12px;
+  padding: 12px;
+  margin: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile Grid */
+.mobile-grid-1 {
+  grid-template-columns: 1fr;
+}
+.mobile-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.mobile-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.mobile-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Mobile Flexbox */
+.mobile-flex-col {
+  flex-direction: column;
+}
+.mobile-flex-row {
+  flex-direction: row;
+}
+.mobile-justify-center {
+  justify-content: center;
+}
+.mobile-items-center {
+  align-items: center;
+}
+.mobile-space-between {
+  justify-content: space-between;
+}
+
+/* Gradient backgrounds optimized for mobile */
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.glass-effect {
+  backdrop-filter: blur(16px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(209, 213, 219, 0.3);
+}
+
+/* Mobile Animations */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Mobile Scrollbar */
+::-webkit-scrollbar {
+  width: 2px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 1px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Mobile Touch Optimization */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Prevent text selection on mobile */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Mobile Status Bar */
+.status-bar-height {
+  height: env(safe-area-inset-top, 20px);
+}
+
+/* Mobile Bottom Navigation */
+.bottom-nav-height {
+  height: calc(60px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Mobile Viewport Units */
+.h-screen-mobile {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.min-h-screen-mobile {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.w-screen-mobile {
+  width: 100vw;
+  max-width: 414px;
+}
+
+/* Mobile-specific overrides */
+@media (max-width: 414px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .text-xs {
+    font-size: 10px;
+  }
+  .text-sm {
+    font-size: 12px;
+  }
+  .text-base {
+    font-size: 14px;
+  }
+  .text-lg {
+    font-size: 16px;
+  }
+  .text-xl {
+    font-size: 18px;
+  }
+  .text-2xl {
+    font-size: 20px;
+  }
+  .text-3xl {
+    font-size: 24px;
+  }
+
+  .p-1 {
+    padding: 4px;
+  }
+  .p-2 {
+    padding: 8px;
+  }
+  .p-3 {
+    padding: 12px;
+  }
+  .p-4 {
+    padding: 16px;
+  }
+  .p-6 {
+    padding: 20px;
+  }
+  .p-8 {
+    padding: 24px;
+  }
+
+  .m-1 {
+    margin: 4px;
+  }
+  .m-2 {
+    margin: 8px;
+  }
+  .m-3 {
+    margin: 12px;
+  }
+  .m-4 {
+    margin: 16px;
+  }
+
+  .gap-1 {
+    gap: 4px;
+  }
+  .gap-2 {
+    gap: 8px;
+  }
+  .gap-3 {
+    gap: 12px;
+  }
+  .gap-4 {
+    gap: 16px;
+  }
+  .gap-6 {
+    gap: 20px;
+  }
+
+  .rounded-lg {
+    border-radius: 8px;
+  }
+  .rounded-xl {
+    border-radius: 12px;
+  }
+  .rounded-2xl {
+    border-radius: 16px;
+  }
+
+  .shadow-lg {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-xl {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 414px) {
+  .mobile-content {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .mobile-screen {
+    height: 100vh;
+    height: 100dvh;
+  }
+}
+
+/* Very small screens (iPhone SE) */
+@media (max-width: 375px) {
+  .mobile-text-3xl {
+    font-size: 20px;
+    line-height: 28px;
+  }
+  .mobile-text-2xl {
+    font-size: 18px;
+    line-height: 24px;
+  }
+  .mobile-text-xl {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .mobile-p-6 {
+    padding: 16px;
+  }
+  .mobile-p-4 {
+    padding: 12px;
+  }
+
+  .mobile-card {
+    padding: 8px;
+    margin: 4px;
+  }
+}
+
+/* Large mobile screens (iPhone Pro Max) */
+@media (min-width: 414px) and (max-width: 428px) {
+  .mobile-container {
+    max-width: 428px;
+  }
+
+  .mobile-screen {
+    max-height: 926px;
+  }
+}
+
+/* Smooth scrolling for mobile */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar on mobile but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile focus states */
+.mobile-focus:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Mobile hover states (for devices that support hover) */
+@media (hover: hover) {
+  .mobile-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) {
+  .mobile-hover:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
